@@ -149,23 +149,33 @@ function initializePixelBoard() {
   }
 }
 
-// Create Cursor
+// Create Cursors
 function createCursor() {
   const pixelBoard = document.getElementById("pixelBoard");
   if (!pixelBoard) return;
 
-  const cursor = document.createElement("div");
-  cursor.className = "cursor";
-  cursor.style.display = "none";
-  pixelBoard.appendChild(cursor);
+  // Create first cursor
+  const cursor1 = document.createElement("div");
+  cursor1.className = "cursor";
+  cursor1.id = "cursor1";
+  cursor1.style.display = "none";
+  pixelBoard.appendChild(cursor1);
+
+  // Create second cursor with slight color variation
+  const cursor2 = document.createElement("div");
+  cursor2.className = "cursor cursor2";
+  cursor2.id = "cursor2";
+  cursor2.style.display = "none";
+  pixelBoard.appendChild(cursor2);
 }
 
 // Simulate Pixel Placing
 function simulatePixelPlacing() {
-  const cursor = document.querySelector(".cursor");
+  const cursor1 = document.getElementById("cursor1");
+  const cursor2 = document.getElementById("cursor2");
   const pixels = document.querySelectorAll(".board-pixel");
 
-  if (!cursor || pixels.length === 0) return;
+  if (!cursor1 || !cursor2 || pixels.length === 0) return;
 
   const colors = [
     "#22c55e", // Green
@@ -178,7 +188,7 @@ function simulatePixelPlacing() {
   let colorIndex = 0;
 
   // Simple cursor positioning function
-  function moveCursorToPixel(pixel) {
+  function moveCursorToPixel(cursor, pixel) {
     const x = parseInt(pixel.dataset.x);
     const y = parseInt(pixel.dataset.y);
 
@@ -186,49 +196,56 @@ function simulatePixelPlacing() {
     const pixelX = 32 + x * 24;
     const pixelY = 32 + y * 24;
 
-    // Position cursor at pixel position
-    cursor.style.left = pixelX + "px";
-    cursor.style.top = pixelY + "px";
+    // Position cursor at pixel position (adjusted 20px up and 20px left)
+    cursor.style.left = pixelX - 20 + "px";
+    cursor.style.top = pixelY - 20 + "px";
   }
 
-  setInterval(() => {
-    // Find a random empty pixel
-    const emptyPixels = Array.from(pixels).filter(
-      (pixel) => !pixel.classList.contains("colored")
-    );
+  // Function to handle individual cursor movement and pixel placement
+  function animateCursor(cursor, delay) {
+    setTimeout(() => {
+      // Find a random empty pixel
+      const emptyPixels = Array.from(pixels).filter(
+        (pixel) => !pixel.classList.contains("colored")
+      );
 
-    if (emptyPixels.length > 0) {
-      const randomPixel =
-        emptyPixels[Math.floor(Math.random() * emptyPixels.length)];
+      if (emptyPixels.length > 0) {
+        const randomPixel =
+          emptyPixels[Math.floor(Math.random() * emptyPixels.length)];
 
-      // Show cursor and move to pixel
-      cursor.style.display = "block";
-      moveCursorToPixel(randomPixel);
+        // Show cursor and move to pixel
+        cursor.style.display = "block";
+        moveCursorToPixel(cursor, randomPixel);
 
-      // Cycle through colors
-      const currentColor = colors[colorIndex];
-      colorIndex = (colorIndex + 1) % colors.length;
+        // Cycle through colors
+        const currentColor = colors[colorIndex];
+        colorIndex = (colorIndex + 1) % colors.length;
 
-      // Simulate hover and click
-      setTimeout(() => {
-        // Add clicking animation
-        cursor.classList.add("cursor-clicking");
-
+        // Simulate hover and click
         setTimeout(() => {
-          // Place pixel
-          placePixel(randomPixel, currentColor);
+          // Add clicking animation
+          cursor.classList.add("cursor-clicking");
 
-          // Remove clicking animation
-          cursor.classList.remove("cursor-clicking");
-
-          // Hide cursor after a moment
           setTimeout(() => {
-            cursor.style.display = "none";
-          }, 500);
-        }, 200);
-      }, 800);
-    }
-  }, 2000);
+            // Place pixel
+            placePixel(randomPixel, currentColor);
+
+            // Remove clicking animation
+            cursor.classList.remove("cursor-clicking");
+
+            // Hide cursor after a moment
+            setTimeout(() => {
+              cursor.style.display = "none";
+            }, 500);
+          }, 200);
+        }, 800);
+      }
+    }, delay);
+  }
+
+  // Start both cursors with different intervals
+  setInterval(() => animateCursor(cursor1, 0), 2500);
+  setInterval(() => animateCursor(cursor2, 1000), 3000);
 }
 
 // Place Pixel Function

@@ -154,23 +154,34 @@
 
       .cursor {
         position: absolute;
-        width: 20px;
-        height: 20px;
-        background: #22c55e;
-        border: 2px solid #ffffff;
-        border-radius: 2px;
-        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+        width: 0;
+        height: 0;
+        border-left: 8px solid #ffffff;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+        border-right: 8px solid transparent;
+        filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8))
+          drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
         transition: all 0.1s ease;
         z-index: 10;
+        transform-origin: left center;
       }
 
-      .dark .cursor {
-        border-color: #0f172a;
+      .cursor2 {
+        border-left-color: #f0f0f0 !important;
+        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))
+          drop-shadow(0 0 4px rgba(255, 255, 255, 0.4)) !important;
       }
 
       .cursor-clicking {
-        transform: scale(0.8);
-        box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+        transform: scale(0.7);
+        filter: drop-shadow(0 0 3px rgba(0, 0, 0, 1))
+          drop-shadow(0 0 6px rgba(0, 0, 0, 0.6));
+      }
+
+      .cursor2.cursor-clicking {
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 1))
+          drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)) !important;
       }
 
       @keyframes fadeIn {
