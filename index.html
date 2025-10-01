@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixxame - Collaborative Pixel Art</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: {
+                DEFAULT: "hsl(var(--primary))",
+                foreground: "hsl(var(--primary-foreground))",
+              },
+              secondary: {
+                DEFAULT: "hsl(var(--secondary))",
+                foreground: "hsl(var(--secondary-foreground))",
+              },
+              muted: {
+                DEFAULT: "hsl(var(--muted))",
+                foreground: "hsl(var(--muted-foreground))",
+              },
+              accent: {
+                DEFAULT: "hsl(var(--accent))",
+                foreground: "hsl(var(--accent-foreground))",
+              },
+              card: {
+                DEFAULT: "hsl(var(--card))",
+                foreground: "hsl(var(--card-foreground))",
+              },
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-in-out",
+              "slide-up": "slideUp 0.6s ease-out",
+              "pixel-appear": "pixelAppear 0.3s ease-out",
+              "cursor-move": "cursorMove 0.8s ease-in-out",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Custom CSS Variables for modern color scheme -->
+    <style>
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --primary: 142.1 76.2% 36.3%;
+        --primary-foreground: 355.7 100% 97.3%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 84% 4.9%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222.2 84% 4.9%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 142.1 76.2% 36.3%;
+        --radius: 0.5rem;
+      }
+
+      .dark {
+        --background: 20 14.3% 4.1%;
+        --foreground: 0 0% 95%;
+        --card: 24 9.8% 10%;
+        --card-foreground: 0 0% 95%;
+        --primary: 142.1 70.6% 45.3%;
+        --primary-foreground: 144.9 80.4% 10%;
+        --secondary: 240 3.7% 15.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 15%;
+        --muted-foreground: 240 5% 64.9%;
+        --accent: 12 6.5% 15.1%;
+        --accent-foreground: 0 0% 98%;
+        --border: 240 3.7% 15.9%;
+        --input: 240 3.7% 15.9%;
+        --ring: 142.4 71.8% 29.2%;
+      }
+
+      body {
+        font-feature-settings: "rlig" 1, "calt" 1;
+      }
+
+      /* Pixel Board Styles */
+      .pixel-board {
+        background-image: linear-gradient(
+            to right,
+            #e5e7eb 1px,
+            transparent 1px
+          ),
+          linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+        background-size: 25px 25px;
+      }
+
+      .dark .pixel-board {
+        background-image: linear-gradient(
+            to right,
+            #374151 1px,
+            transparent 1px
+          ),
+          linear-gradient(to bottom, #374151 1px, transparent 1px);
+      }
+
+      .board-pixel {
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        background: #ffffff;
+        border: 0.5px solid #f3f4f6;
+        transition: all 0.3s ease;
+      }
+
+      .dark .board-pixel {
+        background: #1f2937;
+        border: 0.5px solid #374151;
+      }
+
+      .board-pixel.colored {
+        border: none;
+        animation: pixelAppear 0.3s ease-out;
+      }
+
+      @keyframes pixelAppear {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .cursor {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: #22c55e;
+        border: 2px solid #ffffff;
+        border-radius: 2px;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+        transition: all 0.1s ease;
+        z-index: 10;
+      }
+
+      .dark .cursor {
+        border-color: #0f172a;
+      }
+
+      .cursor-clicking {
+        transform: scale(0.8);
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes cursorMove {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-background text-foreground dark">
+    <div
+      class="min-h-screen bg-gradient-to-br from-zinc-900 via-emerald-900 to-slate-900"
+    >
+      <!-- Header -->
+      <header class="relative z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex h-16 items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div
+                class="h-8 w-8 rounded-lg bg-primary flex items-center justify-center"
+              >
+                <svg
+                  class="h-5 w-5 text-primary-foreground"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  />
+                </svg>
+              </div>
+              <h1 class="text-xl font-bold text-foreground">Pixxame</h1>
+            </div>
+            <nav id="mobile-menu" class="hidden md:flex items-center space-x-6">
+              <a
+                href="#play"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >Play</a
+              >
+              <a
+                href="#learn"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >Tutorial</a
+              >
+              <a
+                href="#resources"
+                class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >Resources</a
+              >
+            </nav>
+            <button
+              id="hamburger"
+              class="md:hidden text-foreground"
+              onclick="toggleMobileMenu()"
+            >
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Hero Section -->
+      <section id="play" class="py-12 lg:py-20">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8 animate-slide-up">
+              <div class="space-y-4">
+                <h2 class="text-4xl lg:text-6xl font-bold tracking-tight">
+                  Create pixel art
+                  <span class="text-primary">together</span>
+                </h2>
+                <p class="text-xl text-muted-foreground max-w-2xl">
+                  Join thousands of artists in a collaborative pixel art canvas.
+                  Place pixels, create masterpieces, and watch your art come to
+                  life in real-time.
+                </p>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="https://hoxt1dbq1.g.pulumi.cyou/"
+                  target="_blank"
+                  class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Start Creating
+                </a>
+                <button
+                  onclick="scrollToSection('learn')"
+                  class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8"
+                >
+                  View Tutorial
+                </button>
+              </div>
+            </div>
+
+            <div class="flex justify-center animate-fade-in">
+              <div class="relative">
+                <div
+                  class="bg-card border border-border rounded-xl p-8 shadow-2xl"
+                >
+                  <div class="pixel-board-container relative">
+                    <div
+                      class="pixel-board w-96 h-96 bg-card border border-border rounded-lg"
+                      id="pixelBoard"
+                    >
+                      <!-- Pixels will be generated by JavaScript -->
+                    </div>
+                    <!-- Animated cursor will be added by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Video Section -->
+      <section id="learn" class="py-12 bg-muted/50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center space-y-4 mb-16">
+            <h3 class="text-3xl lg:text-4xl font-bold">Project Tutorial</h3>
+            <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Complete step-by-step guide on how to build this collaborative
+              pixel art project using Taubyte cloud functions
+            </p>
+          </div>
+
+          <div class="max-w-5xl mx-auto">
+            <div
+              class="relative aspect-video bg-muted rounded-xl overflow-hidden shadow-2xl"
+            >
+              <iframe
+                class="absolute inset-0 w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/RIdwJQB3Tk0?origin=http%3A%2F%2Flocalhost&iv_load_policy=3&modestbranding=1&rel=0&showinfo=0&vq=hd1080"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                title="Pixel Art Tutorial"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resources Section -->
+      <section id="resources" class="py-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center space-y-4 mb-8">
+            <h3 class="text-2xl lg:text-3xl font-bold">Resources & Links</h3>
+            <p class="text-base text-muted-foreground max-w-2xl mx-auto">
+              Explore our codebase, documentation, and community resources
+            </p>
+          </div>
+
+          <div class="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+            <a
+              href="https://github.com/ghir-hak/tb_website_pixxame_frontend"
+              target="_blank"
+              class="group"
+            >
+              <div
+                class="bg-card border border-border rounded-lg px-4 py-3 hover:shadow-lg transition-all duration-200 hover:border-primary/50 hover:-translate-y-1 flex items-center space-x-3 min-w-[120px]"
+              >
+                <div
+                  class="h-8 w-8 bg-primary/10 rounded-md flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <svg
+                    class="h-4 w-4 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                </div>
+                <span
+                  class="text-sm font-medium text-card-foreground group-hover:text-primary transition-colors"
+                >
+                  Frontend
+                </span>
+              </div>
+            </a>
+
+            <a
+              href="https://github.com/ghir-hak/tb_library_pixxame_backend"
+              target="_blank"
+              class="group"
+            >
+              <div
+                class="bg-card border border-border rounded-lg px-4 py-3 hover:shadow-lg transition-all duration-200 hover:border-primary/50 hover:-translate-y-1 flex items-center space-x-3 min-w-[120px]"
+              >
+                <div
+                  class="h-8 w-8 bg-primary/10 rounded-md flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <svg
+                    class="h-4 w-4 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21,15 16,10 5,21" />
+                  </svg>
+                </div>
+                <span
+                  class="text-sm font-medium text-card-foreground group-hover:text-primary transition-colors"
+                >
+                  Backend
+                </span>
+              </div>
+            </a>
+
+            <a href="https://tau.how" target="_blank" class="group">
+              <div
+                class="bg-card border border-border rounded-lg px-4 py-3 hover:shadow-lg transition-all duration-200 hover:border-primary/50 hover:-translate-y-1 flex items-center space-x-3 min-w-[120px]"
+              >
+                <div
+                  class="h-8 w-8 bg-primary/10 rounded-md flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <svg
+                    class="h-4 w-4 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10,9 9,9 8,9" />
+                  </svg>
+                </div>
+                <span
+                  class="text-sm font-medium text-card-foreground group-hover:text-primary transition-colors"
+                >
+                  Docs
+                </span>
+              </div>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@taubyte"
+              target="_blank"
+              class="group"
+            >
+              <div
+                class="bg-card border border-border rounded-lg px-4 py-3 hover:shadow-lg transition-all duration-200 hover:border-primary/50 hover:-translate-y-1 flex items-center space-x-3 min-w-[120px]"
+              >
+                <div
+                  class="h-8 w-8 bg-primary/10 rounded-md flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <svg
+                    class="h-4 w-4 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                </div>
+                <span
+                  class="text-sm font-medium text-card-foreground group-hover:text-primary transition-colors"
+                >
+                  YouTube
+                </span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="border-t border-border/40 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center">
+            <p class="text-sm text-muted-foreground">
+              &copy; 2025 Pixxame. Built for pixel art collaboration.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
